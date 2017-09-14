@@ -1,4 +1,4 @@
-PROGRAM GeneralisedBurgersExample
+PROGRAM burgers_generalised
 
   USE OpenCMISS
   USE OpenCMISS_Iron
@@ -6,25 +6,16 @@ PROGRAM GeneralisedBurgersExample
 #ifndef NOMPIMOD
   USE MPI
 #endif
-
   IMPLICIT NONE
-
 #ifdef NOMPIMOD
 #include "mpif.h"
 #endif
-
 
   !-----------------------------------------------------------------------------------------------------------
   ! PROGRAM VARIABLES AND TYPES
   !-----------------------------------------------------------------------------------------------------------
 
   !Test program parameters
-
-  REAL(CMISSRP), PARAMETER :: LENGTH=3.0_CMISSRP
-  INTEGER(CMISSIntg), PARAMETER :: NUMBER_GLOBAL_X_ELEMENTS=6
-  REAL(CMISSRP), PARAMETER :: START_TIME=0.0_CMISSRP
-  REAL(CMISSRP), PARAMETER :: STOP_TIME=0.1_CMISSRP
-  REAL(CMISSRP), PARAMETER :: TIME_INCREMENT=0.01_CMISSRP
   INTEGER(CMISSIntg), PARAMETER :: CoordinateSystemUserNumber=1
   INTEGER(CMISSIntg), PARAMETER :: RegionUserNumber=2
   INTEGER(CMISSIntg), PARAMETER :: BasisUserNumber=3
@@ -41,9 +32,17 @@ PROGRAM GeneralisedBurgersExample
   INTEGER(CMISSIntg), PARAMETER :: SolverUserNumber=1
 
   !Program variables
+  INTEGER(CMISSIntg) :: DYNAMIC_SOLVER_OUTPUT_TYPE
+  INTEGER(CMISSIntg) :: NONLINEAR_SOLVER_OUTPUT_TYPE
+  INTEGER(CMISSIntg) :: LINEAR_SOLVER_OUTPUT_TYPE
+  INTEGER(CMISSIntg) :: EQUATIONS_OUTPUT
+  INTEGER(CMISSIntg) :: NUMBER_GLOBAL_X_ELEMENTS
+  REAL(CMISSRP) :: LENGTH
+  REAL(CMISSRP) :: START_TIME
+  REAL(CMISSRP) :: STOP_TIME
+  REAL(CMISSRP) :: TIME_INCREMENT
 
   !Program types
-
   TYPE(cmfe_BasisType) :: Basis
   TYPE(cmfe_CoordinateSystemType) :: CoordinateSystem,WorldCoordinateSystem
   TYPE(cmfe_DecompositionType) :: Decomposition
@@ -61,7 +60,6 @@ PROGRAM GeneralisedBurgersExample
   TYPE(cmfe_BoundaryConditionsType) :: BoundaryConditions
 
   !Generic CMISS variables
-
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber
   INTEGER(CMISSIntg) :: EquationsSetIndex
   INTEGER(CMISSIntg) :: Err
@@ -69,14 +67,33 @@ PROGRAM GeneralisedBurgersExample
 
   !Intialise OpenCMISS
   CALL cmfe_Initialise(WorldCoordinateSystem,WorldRegion,Err)
-
   CALL cmfe_ErrorHandlingModeSet(CMFE_ERRORS_TRAP_ERROR,Err)
-
   CALL cmfe_OutputSetOn("Burgers1DAnalytic",Err)
 
   !Get the computational nodes information
   CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
   CALL cmfe_ComputationalNodeNumberGet(ComputationalNodeNumber,Err)
+
+  !-----------------------------------------------------------------------------------------------------------
+  ! PROBLEM CONTROL PANEL
+  !-----------------------------------------------------------------------------------------------------------
+
+  !Set number of elements for FEM discretization
+  NUMBER_GLOBAL_X_ELEMENTS=6
+  LENGTH=3.0_CMISSRP
+
+  !Set output parameters
+  !(NoOutput/ProgressOutput/TimingOutput/SolverOutput/SolverMatrixOutput)
+  DYNAMIC_SOLVER_OUTPUT_TYPE=CMFE_SOLVER_NO_OUTPUT
+  NONLINEAR_SOLVER_OUTPUT_TYPE=CMFE_SOLVER_NO_OUTPUT
+  LINEAR_SOLVER_OUTPUT_TYPE=CMFE_SOLVER_NO_OUTPUT
+  !(NoOutput/TimingOutput/MatrixOutput/ElementOutput)
+  EQUATIONS_OUTPUT=CMFE_EQUATIONS_NO_OUTPUT
+
+  !Set time parameter
+  START_TIME=0.0_CMISSRP
+  STOP_TIME=0.1_CMISSRP
+  TIME_INCREMENT=0.01_CMISSRP
 
   !-----------------------------------------------------------------------------------------------------------
   !COORDINATE SYSTEM
@@ -227,7 +244,7 @@ PROGRAM GeneralisedBurgersExample
   !Set the equations matrices sparsity type (Sparse/Full)
   CALL cmfe_Equations_SparsityTypeSet(Equations,CMFE_EQUATIONS_FULL_MATRICES,Err)
   !Set the equations set output (NoOutput/TimingOutput/MatrixOutput/SolverMatrix/ElementMatrixOutput)
-  CALL cmfe_Equations_OutputTypeSet(Equations,CMFE_EQUATIONS_ELEMENT_MATRIX_OUTPUT,Err)
+  CALL cmfe_Equations_OutputTypeSet(Equations,EQUATIONS_OUTPUT,Err)
   !Finish the equations set equations
   CALL cmfe_EquationsSet_EquationsCreateFinish(EquationsSet,Err)
 
@@ -267,7 +284,7 @@ PROGRAM GeneralisedBurgersExample
   !Get the dymamic solver
   CALL cmfe_Problem_SolverGet(Problem,CMFE_CONTROL_LOOP_NODE,SolverUserNumber,DynamicSolver,Err)
   !Set the output type
-  CALL cmfe_Solver_OutputTypeSet(DynamicSolver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(DynamicSolver,DYNAMIC_SOLVER_OUTPUT_TYPE,Err)
   !Set theta
   CALL cmfe_Solver_DynamicThetaSet(DynamicSolver,0.5_CMISSRP,Err)
 
@@ -279,11 +296,11 @@ PROGRAM GeneralisedBurgersExample
   !Set the line search
   CALL cmfe_Solver_NewtonLineSearchTypeSet(NonlinearSolver,CMFE_SOLVER_NEWTON_LINESEARCH_LINEAR,Err)
   !Set the output type
-  CALL cmfe_Solver_OutputTypeSet(NonlinearSolver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(NonlinearSolver,NONLINEAR_SOLVER_OUTPUT_TYPE,Err)
   !Get the dynamic nonlinear linear solver
   CALL cmfe_Solver_NewtonLinearSolverGet(NonlinearSolver,LinearSolver,Err)
   !Set the output type
-  CALL cmfe_Solver_OutputTypeSet(LinearSolver,CMFE_SOLVER_MATRIX_OUTPUT,Err)
+  CALL cmfe_Solver_OutputTypeSet(LinearSolver,LINEAR_SOLVER_OUTPUT_TYPE,Err)
   !Set the solver settings
 
   LINEAR_SOLVER_DIRECT_FLAG=.FALSE.
@@ -323,7 +340,6 @@ PROGRAM GeneralisedBurgersExample
   !-----------------------------------------------------------------------------------------------------------
 
   !Set up the boundary conditions
-
   !Create the equations set boundary conditions
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditions,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)
@@ -347,11 +363,11 @@ PROGRAM GeneralisedBurgersExample
   !export fields
   CALL cmfe_Fields_Initialise(Fields,Err)
   CALL cmfe_Fields_Create(Region,Fields,Err)
-  CALL cmfe_Fields_NodesExport(Fields,"GeneralisedBurgers","FORTRAN",Err)
-  CALL cmfe_Fields_ElementsExport(Fields,"GeneralisedBurgers","FORTRAN",Err)
+  CALL cmfe_Fields_NodesExport(Fields,"burgers_generalised","FORTRAN",Err)
+  CALL cmfe_Fields_ElementsExport(Fields,"burgers_generalised","FORTRAN",Err)
   CALL cmfe_Fields_Finalise(Fields,Err)
 
   CALL cmfe_Finalise(Err)
   WRITE(*,'(A)') "Program successfully completed."
 
-END PROGRAM GeneralisedBurgersExample
+END PROGRAM burgers_generalised

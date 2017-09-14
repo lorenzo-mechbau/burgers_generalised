@@ -1,0 +1,5 @@
+add_executable(burgers_generalised_fortran burgers_generalised.F90)
+
+target_link_libraries(burgers_generalised_fortran PRIVATE opencmisslibs mpi)
+
+install(TARGETS burgers_generalised_fortran DESTINATION bin)

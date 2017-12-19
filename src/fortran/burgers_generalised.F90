@@ -268,6 +268,7 @@ PROGRAM burgers_generalised
   CALL cmfe_ControlLoop_TimesSet(ControlLoop,START_TIME,STOP_TIME,TIME_INCREMENT,Err)
   !Set the output timing
   CALL cmfe_ControlLoop_TimeOutputSet(ControlLoop,1,Err)
+  CALL cmfe_ControlLoop_OutputTypeSet(ControlLoop,CMFE_CONTROL_LOOP_PROGRESS_OUTPUT,Err)
   !Finish creating the problem control loop
   CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)
 

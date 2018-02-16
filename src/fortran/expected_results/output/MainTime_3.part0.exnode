@@ -1,0 +1,36 @@
+ Group name: BurgersRegion
+ #Fields=3
+ 1) Coordinate, coordinate, rectangular cartesian, #Components=1
+   x.  Value index= 1, #Derivatives= 0
+ 2) U, field,  rectangular cartesian, #Components=1
+   1.  Value index= 2, #Derivatives= 0
+ 3) del U_del n, field,  rectangular cartesian, #Components=1
+   1.  Value index= 3, #Derivatives= 0
+ Node:            1
+  0.0000000000000000E+00
+  -1.0618556701030930E+00
+  0.0000000000000000E+00
+ Node:            2
+  5.0000000000000000E-01
+  -3.7043771387650504E-01
+  0.0000000000000000E+00
+ Node:            3
+  1.0000000000000000E+00
+  -1.3016401894170608E-02
+  0.0000000000000000E+00
+ Node:            4
+  1.5000000000000000E+00
+  1.9035296908514085E-01
+  0.0000000000000000E+00
+ Node:            5
+  2.0000000000000000E+00
+  3.2678978229862926E-01
+  0.0000000000000000E+00
+ Node:            6
+  2.5000000000000000E+00
+  4.2278422249608666E-01
+  0.0000000000000000E+00
+ Node:            7
+  3.0000000000000000E+00
+  4.9622166246851385E-01
+  0.0000000000000000E+00

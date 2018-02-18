@@ -1,6 +1,3 @@
-#gfx read node burgers_generalised.part0.exnode;
-#gfx read elem burgers_generalised.part0.exelem;
-
 $dt=1;                         # frequency
 $steps=100;                    # number of time steps
 $cores=1;                      # number of processors

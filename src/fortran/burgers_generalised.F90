@@ -61,14 +61,12 @@ PROGRAM burgers_generalised
 
   !Generic CMISS variables
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber
-  INTEGER(CMISSIntg) :: EquationsSetIndex
-  INTEGER(CMISSIntg) :: Err
-  LOGICAL :: LINEAR_SOLVER_DIRECT_FLAG
+  INTEGER(CMISSIntg) :: EquationsSetIndex,Err
+  LOGICAL :: LINEAR_SOLVER_DIRECT_FLAG,EXPORT_FIELD
 
   !Intialise OpenCMISS
   CALL cmfe_Initialise(WorldCoordinateSystem,WorldRegion,Err)
   CALL cmfe_ErrorHandlingModeSet(CMFE_ERRORS_TRAP_ERROR,Err)
-  CALL cmfe_OutputSetOn("Burgers1DAnalytic",Err)
 
   !Get the computational nodes information
   CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
@@ -214,14 +212,11 @@ PROGRAM burgers_generalised
   CALL cmfe_EquationsSet_MaterialsCreateFinish(EquationsSet,Err)
   !Initialise materials field
   !Set A
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    & 1,1.0_CMISSRP,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,1,1.0_CMISSRP,Err)
   !Set B
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    & 2,-1.0_CMISSRP,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,2,-1.0_CMISSRP,Err)
   !Set C
-  CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE, &
-    & 3,1.0_CMISSRP,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(MaterialsField,CMFE_FIELD_U_VARIABLE_TYPE,CMFE_FIELD_VALUES_SET_TYPE,3,1.0_CMISSRP,Err)
 
   !-----------------------------------------------------------------------------------------------------------
   ! ANALYTIC FIELD
@@ -268,7 +263,7 @@ PROGRAM burgers_generalised
   CALL cmfe_ControlLoop_TimesSet(ControlLoop,START_TIME,STOP_TIME,TIME_INCREMENT,Err)
   !Set the output timing
   CALL cmfe_ControlLoop_TimeOutputSet(ControlLoop,1,Err)
-  CALL cmfe_ControlLoop_OutputTypeSet(ControlLoop,CMFE_CONTROL_LOOP_PROGRESS_OUTPUT,Err)
+  CALL cmfe_ControlLoop_OutputTypeSet(ControlLoop,CMFE_CONTROL_LOOP_NO_OUTPUT,Err)
   !Finish creating the problem control loop
   CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)
 
@@ -341,10 +336,10 @@ PROGRAM burgers_generalised
   !-----------------------------------------------------------------------------------------------------------
 
   !Set up the boundary conditions
-  !Create the equations set boundary conditions
   CALL cmfe_BoundaryConditions_Initialise(BoundaryConditions,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)
   CALL cmfe_SolverEquations_BoundaryConditionsAnalytic(SolverEquations,Err)
+  !Finish the creation of the equations set boundary conditions
   CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(SolverEquations,Err)
 
   !-----------------------------------------------------------------------------------------------------------
@@ -352,21 +347,26 @@ PROGRAM burgers_generalised
   !-----------------------------------------------------------------------------------------------------------
 
   !Solve the problem
+  WRITE(*,'(A)') "Solving problem..."
   CALL cmfe_Problem_Solve(Problem,Err)
+  WRITE(*,'(A)') "Problem solved!"
 
   !-----------------------------------------------------------------------------------------------------------
   !OUTPUT
   !-----------------------------------------------------------------------------------------------------------
 
   !Output Analytic analysis
-  Call cmfe_AnalyticAnalysis_Output(DependentField,"BurgersAnalytic_1D",Err)
+  Call cmfe_AnalyticAnalysis_Output(DependentField,"GeneralisedBurgersAnalytics",Err)
 
   !export fields
-  CALL cmfe_Fields_Initialise(Fields,Err)
-  CALL cmfe_Fields_Create(Region,Fields,Err)
-  CALL cmfe_Fields_NodesExport(Fields,"burgers_generalised","FORTRAN",Err)
-  CALL cmfe_Fields_ElementsExport(Fields,"burgers_generalised","FORTRAN",Err)
-  CALL cmfe_Fields_Finalise(Fields,Err)
+  EXPORT_FIELD=.FALSE.
+  IF(EXPORT_FIELD) THEN
+    CALL cmfe_Fields_Initialise(Fields,Err)
+    CALL cmfe_Fields_Create(Region,Fields,Err)
+    CALL cmfe_Fields_NodesExport(Fields,"burgers_generalised","FORTRAN",Err)
+    CALL cmfe_Fields_ElementsExport(Fields,"burgers_generalised","FORTRAN",Err)
+    CALL cmfe_Fields_Finalise(Fields,Err)
+  ENDIF
 
   CALL cmfe_Finalise(Err)
   WRITE(*,'(A)') "Program successfully completed."

@@ -90,7 +90,7 @@ PROGRAM burgers_generalised
 
   !Set time parameter
   START_TIME=0.0_CMISSRP
-  STOP_TIME=0.1_CMISSRP
+  STOP_TIME=0.100001_CMISSRP
   TIME_INCREMENT=0.01_CMISSRP
 
   !-----------------------------------------------------------------------------------------------------------
